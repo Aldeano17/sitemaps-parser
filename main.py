@@ -1,6 +1,9 @@
 import requests
 import xmltodict
 import sys
+import Functions
+
+
 from google.cloud import firestore
 
 def save_to_db(obj):
@@ -14,6 +17,7 @@ def get_host(url):
 
 def get_name(url):
     return url.split(".")[1]
+
 
 if len(sys.argv) < 2:
     print("not enough arguments")

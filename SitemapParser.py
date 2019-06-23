@@ -1,14 +1,24 @@
 import requests
 import xmltodict
-import Functions
+
+
+def get_host(url):
+    return url.split("//")[1].split("/")[0]
+
+
+def get_name(url):
+    return url.split(".")[1]
+
+
 
 
 class SitemapParser:
-    def __init__(self, urls):
+    def __init__(self, urls=[], parent=""):
         self.urls = urls
+        self.objs = []
+        self.parent = parent
 
-
-    def load(self):
+    def proccess_urls(self):
         for url in self.urls:
             sitemapurl = url
 
@@ -26,19 +36,35 @@ class SitemapParser:
                 break
 
             obj = {
-                "host": Functions.get_host(sitemapurl),
-                "name": Functions.get_name(sitemapurl),
+                "host": get_host(sitemapurl),
+                "name": get_name(sitemapurl),
                 "size": len(list2),
                 "urls": list2
             }
 
+            self.objs.append(obj)
 
-            Functions.save_to_db(obj)
+    def __proccess_patent(self):
+        response = requests.get(self.parent)
+        list = xmltodict.parse(response.text)
 
-            print(obj)
+        for e in list["sitemapindex"]["sitemap"]:
+            self.urls.append(e["loc"])
 
-listStrings = [
-    "https://www.walmart.com/sitemap_tp1.xml",
-    "https://www.walmart.com/sitemap_bp1_https.xml"
-]
-parser = SitemapParser(listStrings)
+    def load(self):
+        # If parent exists, load urls from the parent url
+        if len(self.parent) > 0:
+            self.__procces_parent()
+
+        # Process URLs
+        self.proccess_urls()
+
+
+# Test #
+if __name__ == "__main__":
+    listStrings = [
+        "https://www.walmart.com/sitemap_tp1.xml",
+        "https://www.walmart.com/sitemap_bp1_https.xml"
+    ]
+    parser = SitemapParser(listStrings)
+
